@@ -1,0 +1,96 @@
+```cpp
+//pread多次读(有偏移量，从下标为offset的位置开始读)
+int FileOperation::pread_file(char *buf, int32_t nbytes, const int64_t offset)
+        {
+            // ssize_t pread(int fd, void *buf, size_t count, off_t offset);
+            // ssize_t pread64(int fd, void *buf, size_t count, off64_t offset);//大文件读
+            // buf：是一个指向存储读取数据的缓冲区的指针；
+            // offset：表示从文件的哪个位置开始读取数据。
+            char *p_tmp = buf;            // p_tmp指针是用于存储读取到的数据的缓冲区起始地址。
+            int32_t left = nbytes;        // 剩余的字节数
+            int64_t read_offset = offset; // read_offset参数表示从文件的哪个位置开始读取数据。
+            int32_t read_len = 0;         // 已读的长度
+
+            int i = 0;
+
+            while (left > 0)
+            {
+                
+                read_len = ::pread64(fd_, p_tmp, left, read_offset);// 从fd中读取,写入到p_tmp
+		//pread()函数每次读的时候都需要更新 缓存区指针、文件偏移量
+                left -= read_len;         // 剩余的字节数,判断是否继续进行循环
+                p_tmp = p_tmp + read_len; // 缓存区的起始地址//p_tmp改变,p_tmp是offset的临时变量//这行可以注释,在读的时候不必改变文件起始位置
+                read_offset += read_len;  // 缓存区偏移量//read_offset改变,read_offset是offset的临时变量
+            }
+
+            return TFS_SUCCESS; // 成功
+        }
+
+--------------------------------------------------------------------
+还有更简洁的做法:
+while ((bytes_read = pread64(fd, buffer, BUFFER_SIZE, offset)) > 0) {//BUFFER_SIZE缓存区大小在读的时候其实不需要改变
+        // 处理读取到的数据
+        printf("%s", buffer);
+        
+        offset += bytes_read;
+    }
+
+```
+```cpp
+//pwrite多次写(有偏移量，从下标为offset的位置开始写)
+int FileOperation::pwrite_file(const char *buf, int32_t nbytes, const int64_t offset)
+{
+	// ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
+	// ssize_t pwrite64(int fd, const void *buf, size_t count, off64_t offset);//大文件写
+	const char *p_tmp = buf;       // p_tmp指针是用于存储写到的数据的缓冲区起始地址。
+	int32_t left = nbytes;         // 剩余的字节数
+	int64_t write_offset = offset; // write_offset参数表示从文件的哪个位置开始写数据。
+	int32_t write_len = 0;         // 已写的长度
+
+	int i = 0;
+
+	while (left > 0)
+	{
+		write_len = ::pwrite64(fd_, p_tmp, left, write_offset);// 将buffer写入fd中
+		
+		//write()函数每次读的时候都需要更新 缓存区指针
+		left -= write_len;         // 剩余的字节数
+		p_tmp = p_tmp + write_len; // 缓冲区的起始地址
+		write_offset += write_len; // 缓冲区偏移量
+	}/*while循环*/
+
+	return TFS_SUCCESS; // 成功
+}
+```
+---------------------------------上面是pread和pwrite-------------------------------
+pread和pwrite在每次读写的时候,需要改变偏移量,pwrite还需要更新缓冲区的起始地址;
+read和write在每次读写的时候,不需要改变偏移量,但是write也需要更新缓冲区的起始地址
+---------------------------------下面是read和write-------------------------------
+```cpp
+// 直接写(无偏移量，从下标为0的位置开始写)
+int FileOperation::write_file(const char *buf, int32_t nbytes)
+{
+	const char *p_tmp = buf; // p_tmp指针是用于存储写到的数据的缓冲区起始地址。
+	int32_t left = nbytes;   // 剩余的字节数
+	int32_t write_len = 0;   // 已写的长度
+	while (left > 0)
+	{
+		
+		
+		write_len = ::write(fd_, p_tmp, left);
+
+
+		left -= write_len;// 剩余的字节数
+		p_tmp += write_len; // 缓冲区的起始地址
+	}/*while循环*/
+	
+	return TFS_SUCCESS; // 成功
+}
+```
+```cpp
+//直接读很简单,只要read返回值>0就一直循环即可
+while ((n = read(fd, buf, BUF_SIZE)) > 0) {
+        // 处理读取到的数据
+}
+```
+
