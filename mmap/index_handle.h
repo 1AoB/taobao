@@ -121,7 +121,7 @@ namespace wxn
 
             // 为响应index_handle.cpp的号召,我们定义一个api,从文件哈希表中查找key是否存在
             // 最好能找到当前的偏移量current_offset和之前的偏移量previous_offset
-            int hash_find(const uint64_t key, int32_t current_offset, int32_t previous_offset);
+            int hash_find(const uint64_t key, int32_t &current_offset, int32_t &previous_offset);
             // 搞一个hash_insert(meta,slot,previous_offset)去插入(slot就是他要插入的哪个桶)
             int32_t hash_insert(const uint64_t key, int32_t previous_offset, MetaInfo &meta);
 
