@@ -462,8 +462,8 @@ namespace wxn
         }
 
         int IndexHandle::hash_find(const uint64_t key,
-                                   int32_t current_offset,
-                                   int32_t previous_offset)
+                                   int32_t &current_offset,
+                                   int32_t &previous_offset)
         {
             int ret = TFS_SUCCESS;
             MetaInfo meta_info;
